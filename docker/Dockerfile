@@ -1,4 +1,4 @@
-ARG BRANCH=main
+ARG BRANCH=vep-112-mvf-edits
 
 ###################################################
 # Stage 1 - docker container to build ensembl-vep #
@@ -48,7 +48,7 @@ RUN if [ "$BRANCH" = "main" ]; \
     else export BRANCH_OPT="-b $BRANCH"; \
     fi && \
     # Get ensembl cpanfile in order to get the list of the required Perl libraries
-    wget -q "https://raw.githubusercontent.com/Ensembl/ensembl/$BRANCH/cpanfile" -O "ensembl_cpanfile" && \
+    wget -q "https://raw.githubusercontent.com/mvforster/ensembl-vep/$BRANCH/cpanfile" -O "ensembl_cpanfile" && \
     # Clone ensembl-variation git repository and compile C code
     git clone $BRANCH_OPT --depth 1 https://github.com/Ensembl/ensembl-variation.git && \
     mkdir var_c_code && \
