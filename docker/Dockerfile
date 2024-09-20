@@ -1,4 +1,5 @@
 ARG BRANCH=vep-112-mvf-edits
+ARG BRANCH_VS=112
 
 ###################################################
 # Stage 1 - docker container to build ensembl-vep #
@@ -33,30 +34,34 @@ WORKDIR $OPT_SRC
 ADD . ensembl-vep
 
 # For release branches, raise an error if VEP version does not match the branch name
-RUN if expr "$BRANCH" : "^release/.*" > /dev/null ; \
-    then \
-      branch_version=$(echo $BRANCH | sed -E 's|release/([0-9]+).*|\1|g'); \
-      vep_version=$(grep VEP_VERSION */modules/Bio/EnsEMBL/VEP/Constants.pm | grep -Eo '[0-9]+'); \
-      if [ $branch_version -ne $vep_version ]; then \
-        echo "ERROR: VEP version $vep_version does not match version in branch name '$BRANCH'"; exit 1; \
-      fi; \
-    fi
+# RUN if expr "$BRANCH" : "^release/.*" > /dev/null ; \
+#     then \
+#       branch_version=$(echo $BRANCH | sed -E 's|release/([0-9]+).*|\1|g'); \
+#       vep_version=$(grep VEP_VERSION */modules/Bio/EnsEMBL/VEP/Constants.pm | grep -Eo '[0-9]+'); \
+#       if [ $branch_version -ne $vep_version ]; then \
+#         echo "ERROR: VEP version $vep_version does not match version in branch name '$BRANCH'"; exit 1; \
+#       fi; \
+#     fi
 
 # Clone/download repositories/libraries
-RUN if [ "${BRANCH}" = "main" ]; \
+RUN if [ "${BRANCH}" = "main" ] && [ -z "${BRANCH_VS}" ]; \
     then export BRANCH_OPT=""; \
-    else export BRANCH_OPT="-b ${BRANCH}"; \
+    else export BRANCH_OPT="-b ${BRANCH_VS}"; \
     fi && \
     # Get ensembl cpanfile in order to get the list of the required Perl libraries
-    wget -q "https://raw.githubusercontent.com/mvforster/ensembl-vep/refs/heads/${BRANCH}/cpanfile" -O "ensembl_cpanfile" && \
+    wget -q "https://raw.githubusercontent.com/mvforster/ensembl-vep/refs/heads/${BRANCH}/cpanfile" -O "ensembl_cpanfile" 
+    
+    # && \
     # Clone ensembl-variation git repository and compile C code
-    git clone $BRANCH_OPT --depth 1 https://github.com/Ensembl/ensembl-variation.git && \
+RUN git clone ${BRANCH_OPT} --depth 1 https://github.com/Ensembl/ensembl-variation.git && \
     mkdir var_c_code && \
     cp ensembl-variation/C_code/*.c ensembl-variation/C_code/Makefile var_c_code/ && \
     rm -rf ensembl-variation && \
-    chmod u+x var_c_code/* && \
+    chmod u+x var_c_code/* 
+    # && \
+
     # Clone bioperl-ext git repository - used by Haplosaurus
-    git clone --depth 1 https://github.com/bioperl/bioperl-ext.git && \
+RUN git clone --depth 1 https://github.com/bioperl/bioperl-ext.git && \
     # Download ensembl-xs - it contains compiled versions of certain key subroutines used in VEP
     wget https://github.com/Ensembl/ensembl-xs/archive/2.3.2.zip -O ensembl-xs.zip && \
     unzip -q ensembl-xs.zip && mv ensembl-xs-2.3.2 ensembl-xs && rm -rf ensembl-xs.zip && \
@@ -201,7 +206,7 @@ RUN echo >> $OPT/.profile && \
 
 # Install dependencies for VEP plugins:
 USER root
-ENV PLUGIN_DEPS="https://raw.githubusercontent.com/Ensembl/VEP_plugins/$BRANCH/config"
+ENV PLUGIN_DEPS="https://raw.githubusercontent.com/Ensembl/VEP_plugins/$BRANCH_VS/config"
 #   - Ubuntu packages
 RUN curl -O "$PLUGIN_DEPS/ubuntu-packages.txt" && \
     apt-get update && apt-get install -y --no-install-recommends \
