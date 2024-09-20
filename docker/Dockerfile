@@ -206,7 +206,7 @@ RUN echo >> $OPT/.profile && \
 
 # Install dependencies for VEP plugins:
 USER root
-ENV PLUGIN_DEPS="https://raw.githubusercontent.com/Ensembl/VEP_plugins/$BRANCH_VS/config"
+ENV PLUGIN_DEPS="https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/$BRANCH_VS/config"
 #   - Ubuntu packages
 RUN curl -O "$PLUGIN_DEPS/ubuntu-packages.txt" && \
     apt-get update && apt-get install -y --no-install-recommends \
