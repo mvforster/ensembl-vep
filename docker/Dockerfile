@@ -43,12 +43,12 @@ RUN if expr "$BRANCH" : "^release/.*" > /dev/null ; \
     fi
 
 # Clone/download repositories/libraries
-RUN if [ "$BRANCH" = "main" ]; \
+RUN if [ "${BRANCH}" = "main" ]; \
     then export BRANCH_OPT=""; \
-    else export BRANCH_OPT="-b $BRANCH"; \
+    else export BRANCH_OPT="-b ${BRANCH}"; \
     fi && \
     # Get ensembl cpanfile in order to get the list of the required Perl libraries
-    wget -q "https://raw.githubusercontent.com/mvforster/ensembl-vep/$BRANCH/cpanfile" -O "ensembl_cpanfile" && \
+    wget -q "https://raw.githubusercontent.com/mvforster/ensembl-vep/refs/heads/${BRANCH}/cpanfile" -O "ensembl_cpanfile" && \
     # Clone ensembl-variation git repository and compile C code
     git clone $BRANCH_OPT --depth 1 https://github.com/Ensembl/ensembl-variation.git && \
     mkdir var_c_code && \
